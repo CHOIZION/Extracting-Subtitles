@@ -13,14 +13,14 @@ class AudioTranscriber:
         self.master = master
         master.title("Audio Transcriber Application")
         
-        # 전체 창의 크기 설정
+
         master.geometry('350x450')
 
-        # Audio Transcriber 프레임 구성
+
         self.frame_audio_transcriber = tk.LabelFrame(master, text="Audio Transcriber", padx=5, pady=5)
         self.frame_audio_transcriber.place(x=5, y=5, width=340, height=180)
         
-        # Audio Transcriber 위젯
+
         self.transcribe_folder_button = tk.Button(self.frame_audio_transcriber, text="Transcribe Folder", command=self.transcribe_folder)
         self.transcribe_folder_button.pack(pady=10)
 
@@ -69,7 +69,7 @@ class AudioTranscriber:
 
 ### Transcriber
     def convert_audio_to_wav(self, file_path):
-        # 파일 확장자 확인
+
         if file_path.lower().endswith(".mp3"):
             self.update_log("Converting MP3 to WAV...")
             sound = AudioSegment.from_mp3(file_path)
@@ -83,30 +83,30 @@ class AudioTranscriber:
             return file_path
     
     def Method_time(self, time_float):
-        # 전체 시간을 분, 초로 나눔
+
         minutes = int(time_float // 60)
         seconds = int(time_float % 60)
-        # 소수점 아래를 밀리초로 변환 (소수점 두 자리까지만 취함)
+
         milliseconds = int((time_float - int(time_float)) * 100)
         return '{:02d}:{:02d}.{:02d}'.format(minutes, seconds, milliseconds)
     
     def process_audio(self, file_path):
         self.update_log("Converting audio file (if necessary)...", 10)
-        # 파일 형식 변환 (.mp3 -> .wav)
+
         wav_path = self.convert_audio_to_wav(file_path)
         self.update_log("Audio file conversion completed.", 20)
 
-        # 오디오 파일 분할 설정
+
         self.update_log("Splitting audio file...", 30)
         audio_regions = auditok.split(
             wav_path,
-            min_dur=0.2,  # 최소 구간 길이 (초)
-            max_dur=4,    # 최대 구간 길이 (초)
-            max_silence=1,  # 구간 사이 최대 침묵 길이 (초)
-            energy_threshold=10  # 에너지 임계값
+            min_dur=0.2,  
+            max_dur=4,    
+            max_silence=1,  
+            energy_threshold=10  
         )
         regions_count = sum(1 for _ in audio_regions)
-        audio_regions = auditok.split(  # 재분할하기 위해 다시 호출
+        audio_regions = auditok.split(  
             wav_path,
             min_dur=0.2,
             max_dur=4,
@@ -124,21 +124,21 @@ class AudioTranscriber:
 
         
         for i, region in enumerate(audio_regions, start=1):
-            progress = 30 + (70 * i // regions_count)  # 30%~100% 사이 진행 상태 계산
+            progress = 30 + (70 * i // regions_count)  
             self.update_log(f"Transcribing segment {i}/{regions_count}...", progress)
 
-            # 임시 파일 이름 생성 및 구간 저장
+
             temp_audio_file_name = tempfile.mktemp(suffix=".wav")
             region.save(temp_audio_file_name)
 
             Sequence_time = self.Method_time(region.meta.start)
 
-            Time_method = '['+Sequence_time+']'  # 구간 시작 시간
+            Time_method = '['+Sequence_time+']'  
 
             with sr.AudioFile(temp_audio_file_name) as source:
                 audio_data = recognizer.record(source)
 
-            os.remove(temp_audio_file_name)  # 임시 파일 삭제
+            os.remove(temp_audio_file_name)  
             try:
                 text = recognizer.recognize_google(audio_data, language='ja-JP')
                 all_text.append(Time_method+' '+text)
@@ -151,17 +151,17 @@ class AudioTranscriber:
         self.show_transcription(full_text, file_path)
         self.update_log("추출 완료! 출력 파일을 확인하세요.", 100)
 
-        if file_path != wav_path:  # 이는 파일이 변환되었다는 것을 의미합니다.
+        if file_path != wav_path:  
             os.remove(wav_path)
             self.update_log("임시 WAV 파일이 제거되었습니다.", 100)
     
     def transcribe_folder(self):
-        # 사용자로부터 폴더 선택 받기
+
         folder_path = filedialog.askdirectory()
         if not folder_path:
             return
         self.update_log(folder_path, None, folder_path)
-        # 폴더 내의 모든 MP3 및 WAV 파일 찾기
+
         supported_files = []
         for file in os.listdir(folder_path):
             if file.lower().endswith(('.mp3', '.wav')):
@@ -171,7 +171,7 @@ class AudioTranscriber:
             messagebox.showinfo("No audio files", "No MP3 or WAV files found in the selected folder.")
             return
 
-        # 각 파일에 대해 process_audio 메소드 호출
+
         for file_path in supported_files:
             self.update_log(f"Processing {os.path.basename(file_path)}...")
             threading.Thread(target=self.process_audio, args=(file_path,), daemon=True).start()
@@ -219,20 +219,19 @@ class AudioTranscriber:
             with open(os.path.join(folder_path, 'Sort_번역.txt'), 'r', encoding='utf-8') as file:
                 lines = file.readlines()  # 파일의 모든 줄을 읽어옴
 
-            # lines 리스트를 순회하면서 짝수 인덱스의 줄(0부터 시작하므로 실제로는 홀수 번째 줄)을 원본 파일 이름으로,
-            # 그 다음 줄을 번역된 파일 이름으로 처리
+
             for i in range(0, len(lines), 3):
                 old_name_base = lines[i].strip()  # 원본 파일 기본 이름 (확장자 없음)
                 new_name_base = lines[i+1].strip()  # 번역된 파일 기본 이름 (확장자 없음)
 
-                # 원본 파일의 전체 이름(확장자 포함)을 찾음
+
                 full_old_name = next((f for f in os.listdir(folder_path) if f.startswith(old_name_base)), None)
                 if full_old_name:
-                    # 확장자 추출
+
                     extension = '.' + full_old_name.split('.', 1)[1] if '.' in full_old_name else ''
 
                     old_path = os.path.join(folder_path, full_old_name)
-                    new_path = os.path.join(folder_path, new_name_base + extension)  # 번역된 이름에 확장자 추가
+                    new_path = os.path.join(folder_path, new_name_base + extension)  
                     if os.path.exists(old_path):
                         os.rename(old_path, new_path)
                         self.file_name_converter_log_label.config(text=f"{old_name_base} -> {new_name_base}{extension}")
@@ -257,16 +256,16 @@ class AudioTranscriber:
             return
         for file_name in os.listdir(folder_path):
             if file_name.endswith('_번역.txt') and file_name != 'Sort_번역.txt':
-                original_name = file_name.replace('_번역.txt', '.txt')  # 변환할 파일의 원본 이름을 생성합니다.
-                new_name = file_name.replace('_번역.txt', '.lrc')  # 새 파일 이름을 생성합니다.
+                original_name = file_name.replace('_번역.txt', '.txt')  
+                new_name = file_name.replace('_번역.txt', '.lrc')  
 
-                # 원본 .txt 파일이 존재하는지 확인하고, 존재한다면 삭제합니다.
+
                 original_path = os.path.join(folder_path, original_name)
                 if os.path.exists(original_path):
                     os.remove(original_path)
                     file_count += 1
                 
-                # _번역.txt 파일을 .lrc로 이름을 변경합니다.
+
                 os.rename(os.path.join(folder_path, file_name), os.path.join(folder_path, new_name))
         self.file_extension_converter_log_label.config(text=f"{file_count} Files Converted to .lrc Extension")
         self.file_extension_converter_log_label.update()
@@ -281,13 +280,13 @@ class AudioTranscriber:
                     wav_path = os.path.join(folder_path, filename)
                     mp3_path = os.path.join(folder_path, filename[:-4] + ".mp3")
                     
-                    # .wav 파일을 로드하고 .mp3로 저장
+
                     audio = AudioSegment.from_wav(wav_path)
                     audio.export(mp3_path, format="mp3")
                     self.file_extension_converter_log_label.config(text=f"Converted {filename} to MP3")
                     self.file_extension_converter_log_label.update()
                     
-                    # 변환된 후 원본 .wav 파일 삭제
+
                     os.remove(wav_path)
                     self.file_extension_converter_log_label.config(text=f"Deleted original WAV file: {filename}")
                     self.file_extension_converter_log_label.update()
@@ -296,7 +295,7 @@ class AudioTranscriber:
         else:
             self.file_extension_converter_log_label.config(text="Folder selection was cancelled.")
             self.file_extension_converter_log_label.update()
-        # 폴더 내의 모든 파일을 순회
+
 
 if __name__ == "__main__":
     root = tk.Tk()
