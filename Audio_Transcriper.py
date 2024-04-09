@@ -67,7 +67,6 @@ class AudioTranscriber:
         self.file_extension_converter_log_label = tk.Label(self.frame_file_extension_converter, text="File Extension Converter log label", bg="white", anchor='w')
         self.file_extension_converter_log_label.pack(fill='both', pady=10)
 
-### Transcriber
     def convert_audio_to_wav(self, file_path):
 
         if file_path.lower().endswith(".mp3"):
@@ -168,7 +167,7 @@ class AudioTranscriber:
                 supported_files.append(os.path.join(folder_path, file))
 
         if not supported_files:
-            messagebox.showinfo("No audio files", "No MP3 or WAV files found in the selected folder.")
+            messagebox.showinfo("No audio files", "선택된 폴더에 MP3 또는 WAV 파일이 존재하지 않습니다.")
             return
 
 
@@ -195,7 +194,6 @@ class AudioTranscriber:
         self.progress.update()
 
 
-### File Name Sorting
     def save_file_names(self):
         folder_path = filedialog.askdirectory()
         name_text = []
@@ -293,7 +291,7 @@ class AudioTranscriber:
             self.file_extension_converter_log_label.config(text="Task Finished!")
             self.file_extension_converter_log_label.update()
         else:
-            self.file_extension_converter_log_label.config(text="Folder selection was cancelled.")
+            self.file_extension_converter_log_label.config(text="폴더 선택이 취소되었습니다.")
             self.file_extension_converter_log_label.update()
 
 
